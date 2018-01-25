@@ -50,10 +50,6 @@ public class RunExternal {
 
 			System.out.println("run : " + wifiScaner + " " + wifiScanerArgs);
 
-			Map<String, String> env = pb.environment();
-			String content = env.entrySet().stream().map(e -> e.getKey() + "=\"" + e.getValue() + "\"")
-					.collect(Collectors.joining(", "));
-			System.out.println(content);
 			process = pb.start();
 			process.waitFor();
 
