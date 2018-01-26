@@ -10,6 +10,17 @@ public class WifiData {
 	public WifiData() {
 	}
 
+	public WifiData(String name, String mac, String strength) {
+		super();
+		this.name = name;
+		this.mac = mac;
+		try {
+		this.strength = Short.parseShort(strength);
+		} catch (NumberFormatException nexp) {
+			this.strength = -999;
+		}
+	}
+
 	public String getName() {
 		return name;
 	}

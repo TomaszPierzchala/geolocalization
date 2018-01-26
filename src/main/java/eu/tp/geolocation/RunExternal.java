@@ -56,8 +56,15 @@ public class RunExternal {
 		} while (process.getInputStream().read() == -1);
 		System.out.println("Run " + counter + " times.");
 
-		System.out.println("Output:\n" + output(process.getInputStream()));
-
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+			br.lines()
+			/*.map(x->{
+				return x.split("\\s");
+			})
+			*/
+			.forEach(System.out::println);
+			System.out.println("Output:\n" + output(process.getInputStream()));
+		}
 	}
 
 	private static String output(InputStream inputStream) throws IOException {
