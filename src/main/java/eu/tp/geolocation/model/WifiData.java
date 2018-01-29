@@ -1,48 +1,32 @@
 package eu.tp.geolocation.model;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+@XmlRootElement(name = "wifiAccessPoint")
 public class WifiData {
-
-	private String name, mac;
-	private short strength;
+	@XmlElement(name="macAddress")
+	private String mac;
+	@XmlElement(name="signalStrength")
+	private Short strength;
+	@XmlElement(name="channel")
+	private Short channel = null;
 	
 	public WifiData() {
 	}
 
-	public WifiData(String name, String mac, String strength) {
+	public WifiData(String mac, String strength, String channel) {
 		super();
-		this.name = name;
 		this.mac = mac;
 		try {
-		this.strength = Short.parseShort(strength);
+			this.strength = Short.parseShort(strength);
 		} catch (NumberFormatException nexp) {
-			this.strength = -999;
+			this.strength = null;
+		}
+		try {
+			this.channel = Short.parseShort(channel);
+		} catch (NumberFormatException nexp) {
+			this.channel = null;
 		}
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getMac() {
-		return mac;
-	}
-
-	public void setMac(String mac) {
-		this.mac = mac;
-	}
-
-	public short getStrength() {
-		return strength;
-	}
-
-	public void setStrength(short strength) {
-		this.strength = strength;
-	}
-	
 }
