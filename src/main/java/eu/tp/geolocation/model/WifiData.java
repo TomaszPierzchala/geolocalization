@@ -45,5 +45,4 @@ public class WifiData {
 		this.strength = strength;
 	}
 	
-
 }

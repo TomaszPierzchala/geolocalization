@@ -19,7 +19,7 @@ public class WifiDatas {
 		this.wifis = wifis;
 	}
 
-    @XmlElement(name="WifiData")
+    @XmlElement(name="wifiData")
 	public List<WifiData> getWifis() {
 		return wifis;
 	}

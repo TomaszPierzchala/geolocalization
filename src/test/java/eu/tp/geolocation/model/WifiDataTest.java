@@ -15,22 +15,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class WifiDataTest {
-
-	@Disabled
-	@Test
-	void makeBlocking() {
-		byte [] bigArr2 = new byte[1024*1024*1024];
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		try {
-			bout.write(bigArr2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("Ala");
-		
-	}
 	
+	// Marshall to XML
 	@Test
 	void ObjectToXML() {
 		// Test inputs
@@ -38,8 +24,8 @@ class WifiDataTest {
 		WifiData wifiData_WRONG_strength = new WifiData("wifiName2", "69:00:23:77", "-51s");
 
 		// Expected results
-		final String MARSHALED_RESULT_OK_STRENGTH = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><wifiData><mac>12:34:56:78</mac><name>wifiName</name><strength>-51</strength></wifiData>";
-		final String MARSHALED_RESULT_WRONG_STRENGTH = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><wifiData><mac>69:00:23:77</mac><name>wifiName2</name><strength>-999</strength></wifiData>";
+		final String MARSHALED_RESULT_OK_STRENGTH = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><wifiData><mac>12:34:56:78</mac><name>wifiName</name><strength>-51</strength></wifiData>";
+		final String MARSHALED_RESULT_WRONG_STRENGTH = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><wifiData><mac>69:00:23:77</mac><name>wifiName2</name><strength>-999</strength></wifiData>";
 		
 		JAXBContext jaxbContext;
 		
@@ -49,11 +35,11 @@ class WifiDataTest {
 			
 			//---
 			// Set the Marshaller media type to JSON or XML
-			jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+			jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/xml");
 			// Set it to true if you need to include the JSON root element in the JSON output
 			jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
 			// Set it to true if you need the JSON output to formatted
-			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			//jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			
 			//---
 
@@ -85,14 +71,13 @@ class WifiDataTest {
 	void ListOfObjectsToXML() {
 		// Test inputs
 		WifiData wifiData[] = new WifiData[3];
-		wifiData[0] = new WifiData("wifiName", "12:34:56:78", "-51");
+		wifiData[0] = new WifiData("wifiName1", "12:34:56:78", "-49");
 		wifiData[1] = new WifiData("wifiName2", "69:00:23:77", "-51s");
 		wifiData[2] = new WifiData("wifiName3", "00:11:22:33", "-134");
 		WifiDatas listWifi = new WifiDatas(Arrays.asList(wifiData));
 
 		// Expected results
-		final String MARSHALED_RESULT = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><wifiData><mac>12:34:56:78</mac><name>wifiName</name><strength>-51</strength></wifiData>";
-		final String MARSHALED_RESULT_2 = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><wifiData><mac>69:00:23:77</mac><name>wifiName2</name><strength>-999</strength></wifiData>";
+		final String MARSHALED_RESULT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><wifiDatas><wifiData><mac>12:34:56:78</mac><name>wifiName1</name><strength>-49</strength></wifiData><wifiData><mac>69:00:23:77</mac><name>wifiName2</name><strength>-999</strength></wifiData><wifiData><mac>00:11:22:33</mac><name>wifiName3</name><strength>-134</strength></wifiData></wifiDatas>";
 		
 		JAXBContext jaxbContext;
 		
@@ -101,7 +86,98 @@ class WifiDataTest {
 			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
 			// output pretty printed
-			 jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			 //jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+			// jaxbMarshaller.marshal(wifiData, file);
+
+			jaxbMarshaller.marshal(listWifi, bArrOutStr);
+			String outputStr = new String(bArrOutStr.toByteArray());
+			
+			System.out.println(outputStr);
+
+			assertEquals(MARSHALED_RESULT, outputStr);
+			
+		} catch (JAXBException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	// Marshall to JSON
+	@Test
+	void ObjectToJSON() {
+		// Test inputs
+		WifiData wifiData_strengthOK = new WifiData("wifiName", "12:34:56:78", "-51");
+		WifiData wifiData_WRONG_strength = new WifiData("wifiName2", "69:00:23:77", "-51s");
+
+		// Expected results
+		final String MARSHALED_RESULT_OK_STRENGTH = "{\"wifiData\":{\"mac\":\"12:34:56:78\",\"name\":\"wifiName\",\"strength\":-51}}";
+		final String MARSHALED_RESULT_WRONG_STRENGTH = "{\"wifiData\":{\"mac\":\"69:00:23:77\",\"name\":\"wifiName2\",\"strength\":-999}}";
+		
+		JAXBContext jaxbContext;
+		
+		try(ByteArrayOutputStream bArrOutStr = new ByteArrayOutputStream(256)) {
+			jaxbContext = JAXBContext.newInstance(WifiData.class);
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+			
+			//---
+			// Set the Marshaller media type to JSON or XML
+			jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+			// Set it to true if you need to include the JSON root element in the JSON output
+			jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
+			// Set it to true if you need the JSON output to formatted
+			//jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			
+			//---
+
+			// output pretty printed
+			// jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, false);
+
+			// jaxbMarshaller.marshal(wifiData, file);
+
+			jaxbMarshaller.marshal(wifiData_strengthOK, bArrOutStr);
+			String outputStr = new String(bArrOutStr.toByteArray());
+			
+			System.out.println(outputStr);
+
+			assertEquals(MARSHALED_RESULT_OK_STRENGTH, outputStr);
+			
+			bArrOutStr.reset();
+			jaxbMarshaller.marshal(wifiData_WRONG_strength, bArrOutStr);
+			outputStr = new String(bArrOutStr.toByteArray());
+			
+			System.out.println(outputStr);
+			assertEquals(MARSHALED_RESULT_WRONG_STRENGTH, outputStr);
+		} catch (JAXBException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	void ListOfObjectsToJSON() {
+		// Test inputs
+		WifiData wifiData[] = new WifiData[3];
+		wifiData[0] = new WifiData("wifiName1", "12:34:56:78", "-49");
+		wifiData[1] = new WifiData("wifiName2", "69:00:23:77", "-51s");
+		wifiData[2] = new WifiData("wifiName3", "00:11:22:33", "-134");
+		WifiDatas listWifi = new WifiDatas(Arrays.asList(wifiData));
+
+		// Expected results
+		final String MARSHALED_RESULT = "{\"wifiDatas\":{\"wifiData\":[{\"mac\":\"12:34:56:78\",\"name\":\"wifiName1\",\"strength\":-49},{\"mac\":\"69:00:23:77\",\"name\":\"wifiName2\",\"strength\":-999},{\"mac\":\"00:11:22:33\",\"name\":\"wifiName3\",\"strength\":-134}]}}";
+		
+		JAXBContext jaxbContext;
+		
+		try(ByteArrayOutputStream bArrOutStr = new ByteArrayOutputStream(512)) {
+			jaxbContext = JAXBContext.newInstance(listWifi.getClass());
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+			// Set the Marshaller media type to JSON or XML
+			jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+			// Set it to true if you need to include the JSON root element in the JSON output
+			jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
+			// output pretty printed
+			// jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 			// jaxbMarshaller.marshal(wifiData, file);
 
