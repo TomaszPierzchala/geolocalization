@@ -41,3 +41,6 @@ buildNumber.properties
 
 # emacs backups
 *~
+
+#other
+.metadata/
