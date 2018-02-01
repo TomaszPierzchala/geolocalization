@@ -29,4 +29,17 @@ public class WifiData {
 		}
 	}
 
+	public Short getStrength() {
+		return strength;
+	}
+
+	public Short getChannel() {
+		return channel;
+	}
+
+	@Override
+	public String toString() {
+		return "[mac=" + mac + ", strength=" + strength + ", channel=" + channel + "]";
+	}
+
 }
