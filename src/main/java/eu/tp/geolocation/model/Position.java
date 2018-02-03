@@ -26,6 +26,6 @@ public class Position {
 
 	@Override
 	public String toString() {
-		return "Position :  lat=" + location + "=lng  +/- " + accuracy + "m]";
+		return "Position :  lat= " + location + " =lng  +/- " + accuracy + " m]";
 	}
 }
