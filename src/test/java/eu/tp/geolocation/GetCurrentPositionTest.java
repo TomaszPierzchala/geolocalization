@@ -1,4 +1,4 @@
-package eu.tp.geolocation.model;
+package eu.tp.geolocation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import eu.tp.geolocation.GetCurrentPosition;
+import eu.tp.geolocation.model.WifiData;
 
 class GetCurrentPositionTest {
 
