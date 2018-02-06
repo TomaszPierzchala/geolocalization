@@ -40,7 +40,7 @@ public class GetCurrentPosition {
 
 		Process process = null;
 		if (osName.toLowerCase().contains("mac")) {
-			process = findAndRunWifiScannerAtMAC();
+			process = findAndRunWifiScannerAtOsX();
 		} else if (osName.toLowerCase().contains("windows")) {
 			throw new RuntimeException("\nMAC OS is ONLY supportet system by now.\n"
 					+ "However, I plan to make Windows support with help of native \"netsh wlan show all\".");
@@ -54,17 +54,17 @@ public class GetCurrentPosition {
 		if (process != null) {
 			byte[] readData = auxInStreamToByteTab(process.getInputStream());
 				// auxiliary output
-				System.out.println(pickUpWifiDataAtMAC(new ByteArrayInputStream(readData)));
+				System.out.println(pickUpWifiDataAtOsX(new ByteArrayInputStream(readData)));
 				System.out.println(output(new ByteArrayInputStream(readData)));
 				//
-			List<WifiData> wifis = pickUpWifiDataAtMAC(new ByteArrayInputStream(readData));
+			List<WifiData> wifis = pickUpWifiDataAtOsX(new ByteArrayInputStream(readData));
 			wifis.sort(Comparator.comparing(WifiData::getStrength).reversed());
 			Position pos = createRequestToGoogleMapsGeolocation(wifis	);
 			System.out.println(pos);
 		}
 	}
 
-	private static Process findAndRunWifiScannerAtMAC() throws InterruptedException, IOException {
+	private static Process findAndRunWifiScannerAtOsX() throws InterruptedException, IOException {
 		String wifiScaner = null, wifiScanerArgs = MAC_WIFI_SCANER_ARGS;
 
 		ProcessBuilder pb = new ProcessBuilder();
@@ -152,7 +152,7 @@ public class GetCurrentPosition {
 		return baos.toByteArray();
 	}
 
-	public static List<WifiData> pickUpWifiDataAtMAC(InputStream inputStream) throws IOException {
+	public static List<WifiData> pickUpWifiDataAtOsX(InputStream inputStream) throws IOException {
 		List<WifiData> wifis = new LinkedList<WifiData>();
 	
 		String pattern = "(.*)((\\p{XDigit}{2}:){5}\\p{XDigit}{2})\\s(-?\\d{1,})\\s+(\\d{1,})(\\s|,)(.*)";
@@ -161,6 +161,7 @@ public class GetCurrentPosition {
 	
 		// Now create matcher object.
 		Matcher m = null;
+		
 		try( BufferedReader br = new BufferedReader(new InputStreamReader(inputStream)) ){
 			String line = br.readLine(); // skip 1st line - headers
 			while ((line = br.readLine()) != null) {
@@ -174,5 +175,35 @@ public class GetCurrentPosition {
 		
 		return wifis;  //.stream().filter(p -> p.getStrength() < -69 && p.getStrength() > -85).collect(Collectors.toList());// .subList(0,
 																														// 6);
+	}
+
+	public static List<WifiData> pickUpWifiDataAtWindows(InputStream inputStream) throws IOException {
+		// parsing output of "netsh wlan show networks mode=BSSID"
+		List<WifiData> wifis = new LinkedList<WifiData>();
+	
+		String pattern = "((\\p{XDigit}{2}:){5}\\p{XDigit}{2}).*\\n.*\\s(\\d{1,2})\\%.*\\n.*\\n.*\\s:\\s(\\d{1,})";
+		// Create a Pattern object
+		Pattern r = Pattern.compile(pattern, Pattern.MULTILINE);
+	
+		// Now create matcher object.
+		Matcher m = null;
+		StringBuilder strb = new StringBuilder(1024);
+		try( BufferedReader br = new BufferedReader(new InputStreamReader(inputStream)) ){
+			String line = br.readLine();
+			strb.append(line); 
+			strb.append("\n");
+			while ((line = br.readLine()) != null) {
+				strb.append(line); 
+				strb.append("\n");
+			}
+			
+			m = r.matcher(strb.toString());
+			while(m.find()) {
+				// System.out.println(m.group(1) + " : " + m.group(3) + " : " + m.group(4));
+				wifis.add(new WifiData(m.group(1), m.group(3), m.group(4)));
+			}
+		}
+		
+		return wifis;
 	}
 }
