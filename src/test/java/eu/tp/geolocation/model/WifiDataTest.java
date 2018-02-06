@@ -15,6 +15,33 @@ import org.junit.jupiter.api.Test;
 
 class WifiDataTest {
 
+	@Test
+	void ConstructorStrengthTest() {
+		String DUMY_MAC = "DUMY", DUMY_CHANNEL = "11";
+		WifiData wifiData = null;
+		
+		wifiData = new WifiData(DUMY_MAC, "-60", DUMY_CHANNEL);
+		assertEquals((short) -60, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "-61", DUMY_CHANNEL);
+		assertEquals((short) -61, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "0", DUMY_CHANNEL);
+		assertEquals((short) -100, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "20", DUMY_CHANNEL);
+		assertEquals((short) -90, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "60", DUMY_CHANNEL);
+		assertEquals((short) -70, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "63", DUMY_CHANNEL);
+		assertEquals((short) -68, wifiData.getStrength().shortValue());
+		//
+		wifiData = new WifiData(DUMY_MAC, "-1", DUMY_CHANNEL);
+		assertEquals((short) -1, wifiData.getStrength().shortValue());
+	}
+	
 	// Marshall to XML
 	@Test
 	void ObjectToXML() {

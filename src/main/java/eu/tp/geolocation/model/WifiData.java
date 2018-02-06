@@ -18,7 +18,12 @@ public class WifiData {
 		super();
 		this.mac = mac;
 		try {
-			this.strength = Short.parseShort(strength);
+			Short toShort = Short.parseShort(strength);
+			if( toShort >=0 ) {
+				toShort = wlanSignalQualityTodBm(toShort);
+			}
+			this.strength = toShort;
+			
 		} catch (NumberFormatException nexp) {
 			this.strength = null;
 		}
@@ -29,6 +34,11 @@ public class WifiData {
 		}
 	}
 
+	private Short wlanSignalQualityTodBm(Short quality) {
+		// converts wlanSignalQuality in % into dBm
+		Short dBm = (short) ( (quality / 2.) - 100 );
+		return dBm;
+	}
 	public Short getStrength() {
 		return strength;
 	}
