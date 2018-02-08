@@ -7,13 +7,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -34,42 +33,66 @@ public class GetCurrentPosition {
 	private static final String MAC_WIFI_SCANER = "airport";
 	private static final String MAC_WIFI_SCANER_ARGS = "-s";
 	private static final String MAC_WIFI_SCANER_PATH = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport";
+	
+	private static final String WIN_WIFI_SCANER = "netsh wlan show networks mode=bssid";
 
+	private static String osName = System.getProperty("os.name");
+	
 	public static void main(String[] args) throws InterruptedException, IOException {
-		String osName = System.getProperty("os.name");
 
 		Process process = null;
-		if (osName.toLowerCase().contains("mac")) {
-			process = findAndRunWifiScannerAtOsX();
-		} else if (osName.toLowerCase().contains("windows")) {
-			throw new RuntimeException("\nMAC OS is ONLY supportet system by now.\n"
-					+ "However, I plan to make Windows support with help of native \"netsh wlan show all\".");
-		} else {
-			throw new RuntimeException(
-					"\nMAC OS is ONLY supportet system by now.\n" + "If you want to have it at Linux,"
-							+ "\nfind a system software scanning surounding wifi like \"airport -s\" at MAC"
-							+ "\nor \"netsh wlan show all\" at Windows and LET me know.");
-		}
-
-		if (process != null) {
-			byte[] readData = auxInStreamToByteTab(process.getInputStream());
-				// auxiliary output
-				System.out.println(pickUpWifiDataAtOsX(new ByteArrayInputStream(readData)));
-				System.out.println(output(new ByteArrayInputStream(readData)));
-				//
-			List<WifiData> wifis = pickUpWifiDataAtOsX(new ByteArrayInputStream(readData));
-			wifis.sort(Comparator.comparing(WifiData::getStrength).reversed());
-			Position pos = createRequestToGoogleMapsGeolocation(wifis	);
-			System.out.println(pos);
-		}
+		process = findAndRunWifiScanner();
+		
+		byte[] readData = auxInStreamToByteTab(process.getInputStream());
+		// auxiliary output
+		System.out.println(pickUpWifiDataAtOsX(new ByteArrayInputStream(readData)));
+		System.out.println(output(new ByteArrayInputStream(readData)));
+		//
+		List<WifiData> wifis = pickUpWifiData(new ByteArrayInputStream(readData));
+		//wifis.sort(Comparator.comparing(WifiData::getStrength).reversed());
+		
+		Position pos = createRequestToGoogleMapsGeolocation(wifis	);
+		System.out.println(pos);
 	}
 
-	private static Process findAndRunWifiScannerAtOsX() throws InterruptedException, IOException {
-		String wifiScaner = null, wifiScanerArgs = MAC_WIFI_SCANER_ARGS;
+	private static Process findAndRunWifiScanner() throws InterruptedException, IOException {
+		String [] wifiScaner = null;
 
 		ProcessBuilder pb = new ProcessBuilder();
 		Process process = null;
 
+		if (osName.toLowerCase().contains("mac")) {
+			wifiScaner = new String[2]; 
+			wifiScaner[0] = findAirportPath(pb);
+			wifiScaner[1] = MAC_WIFI_SCANER_ARGS;
+		} else if (osName.toLowerCase().contains("win")) {
+			wifiScaner = WIN_WIFI_SCANER.split("\\s");
+		} else {
+			throw new SystemNotSupportedException();
+		}
+		
+		int counter = 0;
+
+		do {
+			// try several times, as happens airport has no output
+			counter++;
+			
+			pb.command(wifiScaner);
+
+			System.out.println("run : " + Stream.of(wifiScaner).collect(Collectors.joining(" ")) );
+
+			process = pb.start();
+			process.waitFor();
+
+		} while (process.getInputStream().read() == -1);
+		System.out.println("Run " + counter + " times.");
+		return process;
+	}
+
+	private static String findAirportPath(ProcessBuilder pb) throws IOException, InterruptedException {
+		// Mac only
+		String wifiScaner;
+		Process process;
 		File macWifiScanerPath = new File(MAC_WIFI_SCANER_PATH);
 		if (macWifiScanerPath.exists()) {
 			wifiScaner = MAC_WIFI_SCANER_PATH;
@@ -85,24 +108,9 @@ public class GetCurrentPosition {
 				throw new RuntimeException("Can NOT find \"" + MAC_WIFI_SCANER + "\"at your system.");
 			}
 		}
-
-		int counter = 0;
-
-		do {
-			// try several times, as happens airport has no output
-			counter++;
-			pb.command(wifiScaner, wifiScanerArgs);
-
-			System.out.println("run : " + wifiScaner + " " + wifiScanerArgs);
-
-			process = pb.start();
-			process.waitFor();
-
-		} while (process.getInputStream().read() == -1);
-		System.out.println("Run " + counter + " times.");
-		return process;
+		return wifiScaner;
 	}
-
+	
 	private static Position createRequestToGoogleMapsGeolocation(List<WifiData> wifiData) {
 		WifiDatas wifis = new WifiDatas(wifiData);
 
@@ -205,5 +213,23 @@ public class GetCurrentPosition {
 		}
 		
 		return wifis;
+	}
+	
+	public static List<WifiData> pickUpWifiData(InputStream inputStream) throws IOException {
+		if (osName.toLowerCase().contains("mac")) {
+			return pickUpWifiDataAtOsX(inputStream);
+		} else if (osName.toLowerCase().contains("win")) {
+			return pickUpWifiDataAtWindows(inputStream);
+		} else {
+			throw new SystemNotSupportedException();
+		}
+	}
+	
+	private static class SystemNotSupportedException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		SystemNotSupportedException(){
+			super("\nSystem " + osName + " not supported yet.");
+		}
 	}
 }
