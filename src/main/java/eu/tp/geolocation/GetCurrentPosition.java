@@ -79,13 +79,12 @@ public class GetCurrentPosition {
 			
 			pb.command(wifiScaner);
 
-			System.out.println("run : " + Stream.of(wifiScaner).collect(Collectors.joining(" ")) );
-
 			process = pb.start();
 			process.waitFor();
 
 		} while (process.getInputStream().read() == -1);
-		System.out.println("Run " + counter + " times.");
+		System.out.println("The : " + Stream.of(wifiScaner).collect(Collectors.joining(" ")) );
+		System.out.println("run " + counter + " times, before succeed.");
 		return process;
 	}
 
